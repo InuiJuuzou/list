@@ -45,7 +45,7 @@ private:
 		}
 		IteratorList& operator++()
 		{
-			//value = value->head_->node_next;
+			value = value->node_next;
 			return *this;
 		}
 		IteratorList operator++(int)
@@ -96,8 +96,8 @@ private:
 	size_t size_ = 0;
 public:
 	//??
-	typedef IteratorList<list> iterator;
-	typedef IteratorList<const list> const_iterator;
+	typedef IteratorList<Node> iterator;
+	typedef IteratorList<const Node> const_iterator;
 
 	iterator begin()
 	{
