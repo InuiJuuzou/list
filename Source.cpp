@@ -27,7 +27,7 @@ private:
 	{
 		typedef std::bidirectional_iterator_tag iterator_category;
 		typedef Iter value_type;
-		typedef Iter& reference;
+		typedef T& reference;
 		typedef Iter* pointer;
 		typedef ptrdiff_t difference_type;//разница между указателями
 
@@ -50,13 +50,14 @@ private:
 		}
 		IteratorList operator++(int)
 		{
-			value = value->tell_;
-			return *this;
+			Iter* temp = value;
+			operator++();
+			return temp;
 
 		}
 		IteratorList& operator--()
 		{
-			value->head_;
+			value=value->node_prev;
 			return *this;
 		}
 		IteratorList operator--(int)
@@ -69,11 +70,11 @@ private:
 		/* https://ru.stackoverflow.com/questions/239051/%D0%97%D0%B0%D1%87%D0%B5%D0%BC-%D0%BD%D0%B0%D0%B4%D0%BE-%D0%BF%D0%B8%D1%81%D0%B0%D1%82%D1%8C-typename-%D0%B4%D0%BB%D1%8F-%D1%83%D1%82%D0%BE%D1%87%D0%BD%D0%B5%D0%BD%D0%B8%D1%8F-%D1%82%D0%B8%D0%BF%D0%B0 */
 		const typename IteratorList::reference operator*() const
 		{
-			return*(value->date);
+			return value->date;
 		}
 		typename IteratorList::reference operator*()
 		{
-			return*(value->date);
+			return value->date;
 		}
 		typename IteratorList::pointer operator->()
 		{
@@ -84,9 +85,15 @@ private:
 			return value;
 		}
 
+		IteratorList& operator=(IteratorList rhs)
+		{
+			Iter tmp(rhs);
+			std::swap(value, tmp->value);
+			return *this;
+		}
+
 		friend class list;
 		
-
 	private:
 		IteratorList(Iter* p):value(p){}
 	};
@@ -122,7 +129,14 @@ public:
 	}
 	iterator rend()
 	{
-		return iterator(head_);
+		return nullptr;
+	}
+
+	void swap(list rhl)
+	{
+		std::swap(head_, rhl.head_);
+		std::swap(tell_, rhl.tell_);
+		std::swap(size_, rhl.size_);
 	}
 
 
@@ -141,35 +155,47 @@ public:
 		{
 			pop_back();
 		}
+		head_ = nullptr;
 	}
-
+	//copy
+	//list(const list& copy_list)
+	list(list& copy_list)
+	{
+		if (copy_list == *this)
+			return;
+		for (auto i = copy_list.begin(); i != copy_list.end(); ++i)
+		{
+			push_back(*i);
+		}
+	}
 	list& operator=(const list& rhs)
 	{
-
+		if (rhs == *this)
+			return *this;
+		list tmp(rhs);
+		swap(tmp);
+		return *this;
 	}
 
-	list(const list& copy_list)
+	list(list&& movy_list)
 	{
 
 	}
+	list& operator=(const list&& rhs)
+	{
 
+	}
+	
 	/*list()
 	{
 		tell_ = new Node(? , nullptr, nullptr);
 	}*/
 
-
 	
-	void swap(list rhl)
-	{
-		std::swap(head_, rhl.head_);
-		std::swap(tell_, rhl.tell_);
-		std::swap(size_, rhl.size_);
-	}
 
 	bool empty() const
 	{
-		return !head_;
+		return size_==0;
 	}
 	size_t size() const
 	{
@@ -219,24 +245,36 @@ public:
 
 	void pop_back()
 	{
-		Node* temp = tell_->node_prev;
-		delete tell_;
-		tell_ = temp;
-		--size_;
+		if (tell_ != nullptr) {
+			Node* temp = tell_->node_prev;
+			delete tell_;
+			tell_ = temp;
+			--size_;
+		}
 	}
 	//вставка до позиции
-	const_iterator& insert(const_iterator pos, T& value)
+	void insert(iterator pos, T value)
 	{
 		if (pos == begin())
 		{
 			push_front(value);
-			return head_;
+			//return iterator(head_);
 		}
 
-		while (head_->node_next != nullptr)
+		for (auto i = begin(); i != end(); ++i)
 		{
-
+			if (i == pos)
+			{
+				Node* newNode = new Node(value, nullptr, nullptr);
+				newNode->node_next = i;
+				newNode->node_prev = i->node_prev;
+				//return iterator(newNode);
+				return;
+			}
 		}
+
+		push_back(value);
+		//return iterator(tell_);
 		
 	}
 
@@ -247,6 +285,18 @@ public:
 	T& back() const
 	{
 		return tell_->date;
+	}
+
+	bool operator==(const list& rhs) const
+	{
+		if (head_ == rhs.head_ && tell_ == rhs.tell_)
+			return true;
+		return false;
+	}
+
+	bool operator!=(const list& rhs) const
+	{
+		return !(*this == rhs);
 	}
 	//friend std::ostream& operator<<(std::ostream& os, const iterator& obj);
 };
@@ -259,7 +309,7 @@ public:
 
 int main()
 {
-	list<int> lt = { 1,2,3,4,5,6,7 };
+	list<int> lt = { 1,2,3,5,7 };
 
 	std::cout << lt.empty() << " " << lt.size() << std::endl;
 	/*lt.push_front(1);
@@ -273,9 +323,20 @@ int main()
 	lt.front() = 7;
 
 	std::cout << lt.front();*/
-	int j = 0;
+	//lt.insert(lt.begin(), 99);
+	std::cout << lt.empty() << " " << lt.size() << std::endl;
 	for (auto i = lt.begin(); i != lt.end(); ++i)
 	{
-		std::cout << j++;
+		std::cout << *i;
 	}
+	std::cout << "\n";
+	list<int> tt(lt);
+
+	for (auto i = tt.begin(); i != tt.end(); ++i)
+	{
+		std::cout << *i;
+	}
+	
+
+	std::cout << "H";
 }
