@@ -1,4 +1,4 @@
-#pragma execution_character_set("utf-8")
+п»ї#pragma execution_character_set("utf-8")
 #include <iostream>
 
 template<typename T>
@@ -22,7 +22,7 @@ private:
 		}
 
 	};
-	//двунаправленные итераторы (bidirectional iterators)
+	//РґРІСѓРЅР°РїСЂР°РІР»РµРЅРЅС‹Рµ РёС‚РµСЂР°С‚РѕСЂС‹ (bidirectional iterators)
 	template<typename Iter>
 	struct IteratorList
 	{
@@ -30,7 +30,7 @@ private:
 		typedef Iter value_type;
 		typedef T& reference;
 		typedef Iter* pointer;
-		typedef ptrdiff_t difference_type;//разница между указателями
+		typedef ptrdiff_t difference_type;//СЂР°Р·РЅРёС†Р° РјРµР¶РґСѓ СѓРєР°Р·Р°С‚РµР»СЏРјРё
 
 		Iter* value;
 
@@ -132,7 +132,7 @@ public:
 	{
 		return nullptr;
 	}
-	//не бросает исключения т.к. указатели и базовые типы не бросают исключения
+	//РЅРµ Р±СЂРѕСЃР°РµС‚ РёСЃРєР»СЋС‡РµРЅРёСЏ С‚.Рє. СѓРєР°Р·Р°С‚РµР»Рё Рё Р±Р°Р·РѕРІС‹Рµ С‚РёРїС‹ РЅРµ Р±СЂРѕСЃР°СЋС‚ РёСЃРєР»СЋС‡РµРЅРёСЏ
 	void swap(list rhl) 
 	{
 		std::swap(head_, rhl.head_);
@@ -170,8 +170,8 @@ public:
 		if (&copy_list == this)
 			return;
 
-		list<T> temp;// чтоб не портить наш объект создаем копию 
-		//вставляем элементы в копию
+		list<T> temp;// С‡С‚РѕР± РЅРµ РїРѕСЂС‚РёС‚СЊ РЅР°С€ РѕР±СЉРµРєС‚ СЃРѕР·РґР°РµРј РєРѕРїРёСЋ 
+		//РІСЃС‚Р°РІР»СЏРµРј СЌР»РµРјРµРЅС‚С‹ РІ РєРѕРїРёСЋ
 		for (auto i = copy_list.begin(); i != copy_list.end(); ++i)
 		{
 			temp.push_back(*i);
@@ -179,12 +179,12 @@ public:
 		
 		swap(temp);
 	}
-	//безопасен
+	//Р±РµР·РѕРїР°СЃРµРЅ
 	list& operator=(const list& rhs)
 	{
 		if (&rhs == this)
 			return *this;
-		list tmp(rhs);//может бросить исключение но не меняет состояние класса. В конце метода самоуничтожется с помощью диструктора
+		list tmp(rhs);//РјРѕР¶РµС‚ Р±СЂРѕСЃРёС‚СЊ РёСЃРєР»СЋС‡РµРЅРёРµ РЅРѕ РЅРµ РјРµРЅСЏРµС‚ СЃРѕСЃС‚РѕСЏРЅРёРµ РєР»Р°СЃСЃР°. Р’ РєРѕРЅС†Рµ РјРµС‚РѕРґР° СЃР°РјРѕСѓРЅРёС‡С‚РѕР¶РµС‚СЃСЏ СЃ РїРѕРјРѕС‰СЊСЋ РґРёСЃС‚СЂСѓРєС‚РѕСЂР°
 
 		swap(tmp);
 		return *this;
@@ -219,8 +219,8 @@ public:
 		Node* newNode = new Node(value, head_, nullptr);
 		try
 		{
-			//может выбросить исключение
-			//newNode = new Node(value, head_, nullptr);//создали новую ноду указывающую на следующую, предыдущего нет
+			//РјРѕР¶РµС‚ РІС‹Р±СЂРѕСЃРёС‚СЊ РёСЃРєР»СЋС‡РµРЅРёРµ
+			//newNode = new Node(value, head_, nullptr);//СЃРѕР·РґР°Р»Рё РЅРѕРІСѓСЋ РЅРѕРґСѓ СѓРєР°Р·С‹РІР°СЋС‰СѓСЋ РЅР° СЃР»РµРґСѓСЋС‰СѓСЋ, РїСЂРµРґС‹РґСѓС‰РµРіРѕ РЅРµС‚
 			//--------------------------------------------------
 			if (head_ == nullptr)
 			{
@@ -230,12 +230,12 @@ public:
 				return;
 			}
 			head_->node_prev = newNode;
-			head_ = newNode;//переместили головной указатель на новую ноду
+			head_ = newNode;//РїРµСЂРµРјРµСЃС‚РёР»Рё РіРѕР»РѕРІРЅРѕР№ СѓРєР°Р·Р°С‚РµР»СЊ РЅР° РЅРѕРІСѓСЋ РЅРѕРґСѓ
 			++size_;
 		}
 		catch (...)
 		{
-			//освободить выделенную память
+			//РѕСЃРІРѕР±РѕРґРёС‚СЊ РІС‹РґРµР»РµРЅРЅСѓСЋ РїР°РјСЏС‚СЊ
 			delete newNode;
 			throw;
 		}
@@ -243,7 +243,7 @@ public:
 
 	void pop_front()
 	{
-		//создание временного узла чтоб не потерять его
+		//СЃРѕР·РґР°РЅРёРµ РІСЂРµРјРµРЅРЅРѕРіРѕ СѓР·Р»Р° С‡С‚РѕР± РЅРµ РїРѕС‚РµСЂСЏС‚СЊ РµРіРѕ
 		Node* temp = head_->node_next;
 		delete head_;
 		head_ = temp;
@@ -286,7 +286,7 @@ public:
 			--size_;
 		}
 	}
-	//вставка до позиции
+	//РІСЃС‚Р°РІРєР° РґРѕ РїРѕР·РёС†РёРё
 	void insert(iterator& pos, T value)
 	{
 		if (pos == begin())
@@ -343,7 +343,6 @@ public:
 
 int main()
 {
-	system("chcp 1251");
 	list<int> lt = { 1,2,3,5,7 };
 
 	std::cout << lt.empty() << " " << lt.size() << std::endl;
