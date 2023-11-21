@@ -21,6 +21,19 @@ private:
 			node_prev = prev;
 		}
 
+		//??
+		//~Node()
+		//{
+		//	delete node_next;
+		//	delete node_prev;
+		//}
+
+		void swap(Node& rhs) noexcept
+		{
+			std::swap(date, rhs.date);
+			std::swap(node_next, rhs.node_next);
+			std::swap(node_prev, rhs.node_prev);
+		}
 	};
 	//двунаправленные итераторы (bidirectional iterators)
 	template<typename Iter>
@@ -115,11 +128,11 @@ public:
 	{
 		return nullptr;
 	}
-	const_iterator cbegin()const
+	const_iterator cbegin() const
 	{
 		return const_iterator(head_);
 	}
-	const_iterator cend()const
+	const_iterator cend() const
 	{
 		return nullptr;
 	}
@@ -132,8 +145,18 @@ public:
 	{
 		return nullptr;
 	}
+	const_iterator rbegin() const
+	{
+		return const_iterator(tell_);
+	}
+	const_iterator rend() const
+	{
+		return nullptr;
+	}
+
+	//неправильно
 	//не бросает исключения т.к. указатели и базовые типы не бросают исключения
-	void swap(list rhl) 
+	void swap(list rhl) noexcept 
 	{
 		std::swap(head_, rhl.head_);
 		std::swap(tell_, rhl.tell_);
@@ -167,43 +190,51 @@ public:
 	//list(const list& copy_list)
 	list(list& copy_list)
 	{
+		//проверяем что не копируем сами себя
 		if (&copy_list == this)
 			return;
+		//у нас еще нет текущей 
+		//должен ли он выбрасывать исключения?
 
-		list<T> temp;// чтоб не портить наш объект создаем копию 
-		//вставляем элементы в копию
-		for (auto i = copy_list.begin(); i != copy_list.end(); ++i)
+		for (auto i = copy_list.cbegin(); i != copy_list.cend(); ++i)
 		{
-			temp.push_back(*i);
+			push_back(*i);
 		}
-		
-		swap(temp);
+
+		//list<T> temp;// чтоб не портить наш объект создаем копию в конце копия с данными которые были у нас самоуничтожится
+		////вставляем элементы в копию
+		//for (auto i = copy_list.begin(); i != copy_list.end(); ++i)
+		//{
+		//	temp.push_back(*i);
+		//}
+		//
+		////цикл чтоб поменять каждый узел местами
+		//for (auto i = temp.begin(); i != temp.end(); ++i)
+		//{
+		//}
+		//неправильно
+		//swap(temp);
 	}
 	//безопасен
-	list& operator=(const list& rhs)
+	list& operator=(list& rhs)
 	{
 		if (&rhs == this)
 			return *this;
 		list tmp(rhs);//может бросить исключение но не меняет состояние класса. В конце метода самоуничтожется с помощью диструктора
-
+		
+		//неправильно?
 		swap(tmp);
 		return *this;
 	}
 
 	list(list&& movy_list)
 	{
-
+		//??
 	}
 	list& operator=(const list&& rhs)
 	{
-
+		//??
 	}
-	
-	/*list()
-	{
-		tell_ = new Node(? , nullptr, nullptr);
-	}*/
-
 	
 	bool empty() const
 	{
@@ -214,7 +245,7 @@ public:
 		return size_;
 	}
 
-	void push_front(T value)
+	void push_front(T& value)
 	{
 		Node* newNode = new Node(value, head_, nullptr);
 		try
@@ -287,29 +318,80 @@ public:
 		}
 	}
 	//вставка до позиции
-	void insert(iterator& pos, T value)
-	{
-		if (pos == begin())
-		{
-			push_front(value);
-			//return iterator(head_);
-		}
+	//void insert(iterator& pos, T& value)
+	//{
+	//	if (pos == begin())
+	//	{
+	//		push_front(value);
+	//		//return iterator(head_);
+	//	}
+	//	for (auto i = begin(); i != end(); ++i)
+	//	{
+	//		if (i == pos)
+	//		{
+	//			Node* newNode = new Node(value, nullptr, nullptr);
+	//			newNode->node_next = i;
+	//			newNode->node_prev = i->node_prev;
+	//			//return iterator(newNode);
+	//			return;
+	//		}
+	//	}
+	//	push_back(value);
+	//	//return iterator(tell_);
+	//	
+	//}
 
-		for (auto i = begin(); i != end(); ++i)
-		{
-			if (i == pos)
+	iterator insert(iterator& pos, T& value)
+	{
+		try {//т.к. может прилететь исключение из методов вставки
+			if (pos == begin())
 			{
-				Node* newNode = new Node(value, nullptr, nullptr);
-				newNode->node_next = i;
-				newNode->node_prev = i->node_prev;
-				//return iterator(newNode);
-				return;
+				push_front(value);
+				return begin();
 			}
 		}
+		catch (...)
+		{
+			pop_front();//удаляем вставленный элемент чтобы вернуть все к тому что было
+			throw;
+		}
+		try{
+			if (pos == rbegin())
+			{
+				push_back(value);
+				return rbegin();
+			}
+		} 
+		catch (...)
+		{
+			pop_back();
+			throw;
+		}
+		try {
+			//проходимся по всему созданному листу и ищем позицию для вставки
+			auto i = begin();
+			for (; i != end(); ++i)
+			{
+				if (i == pos)
+				{
+					Node* newNode = new Node(value, nullptr, nullptr);
 
-		push_back(value);
-		//return iterator(tell_);
-		
+					newNode->node_prev = i->node_prev;
+					newNode->node_next = i;
+					//поменять указатель на предыдущий у i
+					//поменять указатель на следующий у --i
+					newNode->node_prev->node_next = newNode;
+					i->node_prev = newNode;
+					break;
+				}
+			}
+		}
+		catch (...)
+		{
+
+		}
+
+		return pos;
 	}
 
 	T& front() const
@@ -346,32 +428,37 @@ int main()
 	list<int> lt = { 1,2,3,5,7 };
 
 	std::cout << lt.empty() << " " << lt.size() << std::endl;
-	/*lt.push_front(1);
-	lt.push_front(2);
-	lt.push_front(3);*/
-	/*lt.push_back(1);
-	lt.push_back(2);
-	lt.push_back(3);
-	std::cout << lt.empty() << " " << lt.size() << std::endl;
 
-	lt.front() = 7;
-
-	std::cout << lt.front();*/
-	//lt.insert(lt.begin(), 99);
-	std::cout << lt.empty() << " " << lt.size() << std::endl;
 	for (auto i = lt.begin(); i != lt.end(); ++i)
 	{
 		std::cout << *i;
 	}
 	std::cout << "\n";
 
-	list<int> tt(lt);
+	//list<int> tt(lt);
 
-	for (auto i = tt.begin(); i != tt.end(); ++i)
+	//for (auto i = tt.begin(); i != tt.end(); ++i)
+	//{
+	//	std::cout << *i;
+	//}
+	
+	list<int> ut = { 7,6,5,4,3,2,1 };
+	std::cout << ut.empty() << " " << ut.size() << std::endl;
+
+	for (auto i = ut.begin(); i != ut.end(); ++i)
 	{
 		std::cout << *i;
 	}
-	
+
+	lt = ut;
+
+	std::cout << "lt\n";
+	std::cout << lt.empty() << " " << lt.size() << std::endl;
+
+	for (auto i = lt.begin(); i != lt.end(); ++i)
+	{
+		std::cout << *i;
+	}
 
 	std::cout << "H";
 }
