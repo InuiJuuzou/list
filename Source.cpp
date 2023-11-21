@@ -1,3 +1,4 @@
+#pragma execution_character_set("utf-8")
 #include <iostream>
 
 template<typename T>
@@ -35,13 +36,13 @@ private:
 
 		IteratorList(const IteratorList& it):value(it.value){}//copy
 
-		bool operator==(const IteratorList& rhs)
+		bool operator==(const IteratorList& rhs) const
 		{
 			return value == rhs.value;
 		}
-		bool operator!=(const IteratorList& rhs)
+		bool operator!=(const IteratorList& rhs) const
 		{
-			return value != rhs.value;
+			return !(*this == rhs);
 		}
 		IteratorList& operator++()
 		{
@@ -72,7 +73,7 @@ private:
 		{
 			return value->date;
 		}
-		typename IteratorList::reference operator*()
+		typename IteratorList::reference operator*() 
 		{
 			return value->date;
 		}
@@ -131,22 +132,27 @@ public:
 	{
 		return nullptr;
 	}
-
-	void swap(list rhl)
+	//не бросает исключения т.к. указатели и базовые типы не бросают исключения
+	void swap(list rhl) 
 	{
 		std::swap(head_, rhl.head_);
 		std::swap(tell_, rhl.tell_);
 		std::swap(size_, rhl.size_);
 	}
 
-
 	list() = default;
 
 	list(std::initializer_list<T> values)
 	{
-		for (auto i = values.begin(); i != values.end(); ++i)
+		try {
+			for (auto i = values.begin(); i != values.end(); ++i)
+			{
+				push_back(*i);
+			}
+		}
+		catch (...)
 		{
-			push_back(*i);
+			//??
 		}
 	}
 	~list()
@@ -161,18 +167,25 @@ public:
 	//list(const list& copy_list)
 	list(list& copy_list)
 	{
-		if (copy_list == *this)
+		if (&copy_list == this)
 			return;
+
+		list<T> temp;// чтоб не портить наш объект создаем копию 
+		//вставляем элементы в копию
 		for (auto i = copy_list.begin(); i != copy_list.end(); ++i)
 		{
-			push_back(*i);
+			temp.push_back(*i);
 		}
+		
+		swap(temp);
 	}
+	//безопасен
 	list& operator=(const list& rhs)
 	{
-		if (rhs == *this)
+		if (&rhs == this)
 			return *this;
-		list tmp(rhs);
+		list tmp(rhs);//может бросить исключение но не меняет состояние класса. В конце метода самоуничтожется с помощью диструктора
+
 		swap(tmp);
 		return *this;
 	}
@@ -192,7 +205,6 @@ public:
 	}*/
 
 	
-
 	bool empty() const
 	{
 		return size_==0;
@@ -204,18 +216,29 @@ public:
 
 	void push_front(T value)
 	{
-		//может выбросить исключение
-		Node* newNode = new Node(value, head_,nullptr);//создали новую ноду указывающую на следующую, предыдущего нет
-		if (head_ == nullptr)
+		Node* newNode = new Node(value, head_, nullptr);
+		try
 		{
-			head_ = newNode;
-			tell_ = newNode;
+			//может выбросить исключение
+			//newNode = new Node(value, head_, nullptr);//создали новую ноду указывающую на следующую, предыдущего нет
+			//--------------------------------------------------
+			if (head_ == nullptr)
+			{
+				head_ = newNode;
+				tell_ = newNode;
+				++size_;
+				return;
+			}
+			head_->node_prev = newNode;
+			head_ = newNode;//переместили головной указатель на новую ноду
 			++size_;
-			return;
 		}
-		head_->node_prev = newNode;
-		head_ = newNode;//переместили головной указатель на новую ноду
-		++size_;
+		catch (...)
+		{
+			//освободить выделенную память
+			delete newNode;
+			throw;
+		}
 	}
 
 	void pop_front()
@@ -230,17 +253,28 @@ public:
 	void push_back(T value)
 	{
 		Node* newNode = new Node(value, nullptr, tell_);
-		if (tell_ == nullptr)
+		try
 		{
-			head_ = newNode;
+			//Node* newNode = new Node(value, nullptr, tell_);
+			//----------------------------
+			if (tell_ == nullptr)
+			{
+				head_ = newNode;
+				tell_ = newNode;
+				++size_;
+				return;
+			}
+
+			tell_->node_next = newNode;
 			tell_ = newNode;
 			++size_;
-			return;
-		}
 
-		tell_->node_next = newNode;
-		tell_ = newNode;
-		++size_;
+		}
+		catch (...)
+		{
+			delete newNode;
+			throw;
+		}
 	}
 
 	void pop_back()
@@ -253,7 +287,7 @@ public:
 		}
 	}
 	//вставка до позиции
-	void insert(iterator pos, T value)
+	void insert(iterator& pos, T value)
 	{
 		if (pos == begin())
 		{
@@ -309,6 +343,7 @@ public:
 
 int main()
 {
+	system("chcp 1251");
 	list<int> lt = { 1,2,3,5,7 };
 
 	std::cout << lt.empty() << " " << lt.size() << std::endl;
@@ -330,6 +365,7 @@ int main()
 		std::cout << *i;
 	}
 	std::cout << "\n";
+
 	list<int> tt(lt);
 
 	for (auto i = tt.begin(); i != tt.end(); ++i)
